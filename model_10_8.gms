@@ -65,7 +65,7 @@ obj1 .. obj =e= sum(t$(ord(t) lt card(t)), betas(t)*u(t)) +
 
 * bound constraints
 w.lo(t) = epsilon;
-w.up(t) = 43;
+w.up(t) = 20;
 b.lo(t) = epsilon;
 b.up(t) = Blim;
 cp.lo(t) = epsilon;
@@ -105,13 +105,13 @@ alias(v1,v2,v3,v4,d1,d2,d3,d4);
 
 scalars
 wmin lower bound of w /0/
-wmax upper bound of w /40/
+wmax upper bound of w /20/
 bmin lower bound of b /0/
 bmax upper bound of b /9/
 amin lower bound of alpha /0.1/
 amax upper bound of alpha /0.9/
 mpmin lower bound of mortgage payment /0.05/
-mpmax upper bound of mortgage payment /1.5/
+mpmax upper bound of mortgage payment /0.9/
 ;
 
 *Chebyshev parameters
