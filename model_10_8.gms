@@ -98,8 +98,10 @@ model CCDP /all/;
 *******************************************************
 * Step 2: Optimization step
 
-set v1 grid space/1*3/
-alias(v1,v2,v3,v4,d1,d2,d3,d4);
+set v1 grid space/1*10/
+set v3 grid space/1*3/
+alias(v1,v2,d1,d2)
+alias(v3,v4,d3,d4);
 
 *approximation domain
 
