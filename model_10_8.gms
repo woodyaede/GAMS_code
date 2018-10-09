@@ -59,9 +59,9 @@ bor(t)$(ord(t) lt card(t)) .. b(t+1) =e= (1+rb)*(b(t)+cb(t)-cp(t));
 debt0(t) .. b(t)+cb(t)-cp(t) =g= 0;
 debt1(t) .. b(t)+cb(t)-cp(t) =l= Blim;
 cash(t) .. w(t)+y(t)-ch(t)-cp(t) =g= 0;
-util(t)$(ord(t) lt card(t)) .. u(t) =e= (alpha*h**gamma + (1-alpha)*cb(t)**gamma)**((1-rho2)/gamma)/(1-rho2);
+util(t)$(ord(t) lt card(t)) .. u(t) =e= (h**alpha * cb(t)**(1-alpha))**rho2/(1-rho2);
 obj1 .. obj =e= sum(t$(ord(t) lt card(t)), betas(t)*u(t)) +
-  sum(t$(ord(t)=card(t)), betas(t)/(1-beta)*(alpha*h**gamma + (1-alpha)*(y(t)+ rs*w(t)/(1+rs)- rb*b(t)/(1+rb) )**gamma)**((1-rho2)/gamma)/(1-rho2));
+  sum(t$(ord(t)=card(t)), betas(t)/(1-beta)*(h**alpha * (y(t)+ rs*w(t)/(1+rs)- rb*b(t)/(1+rb))**(1-alpha))**rho2/(1-rho2));
 
 * bound constraints
 w.lo(t) = epsilon;
@@ -82,9 +82,9 @@ alpha = 0.5;
 h = 0.5;
 
 
-u.l(t) = (alpha*h**gamma + (1-alpha)*cb.l(t)**gamma)**((1-rho2)/gamma)/(1-rho2);
+u.l(t) = (h**alpha * cb.l(t)**(1-alpha))**rho2/(1-rho2);
 obj.l = sum(t$(ord(t) lt card(t)), betas(t)*u.l(t)) +
-  sum(t$(ord(t)=card(t)), betas(t)/(1-beta)*(alpha*h**gamma + (1-alpha)*cb.l(t)**gamma)**((1-rho2)/gamma)/(1-rho2));
+  sum(t$(ord(t)=card(t)), betas(t)/(1-beta)*(h**alpha * cb.l(t)**(1-alpha))**rho2/(1-rho2));
 
 Option limrow=0,limcol=0,solprint=off;
 OPTION ITERLIM = 500000;
