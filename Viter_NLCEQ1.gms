@@ -57,7 +57,7 @@ bor(t2) .. b(t2+1) =e= (1+rb)*(b(t2)+c(t2)-p(t2));
 debt0(t2) .. b(t2)+c(t2)-p(t2) =g= 0;
 debt1(t2) .. b(t2)+c(t2)-p(t2) =l= Blim;
 cashR(t2) .. s(t2)+y(t2)-rent(t2)-p(t2) =g= 0;
-debtT(t2)$(ord(t2)=card(t2)) .. b(t2) =e= 0;
+debtT(t2)$(ord(t2)=card(t2)) .. b(t2) =e= epsilon;
 utilR(t2) .. uR(t2) =e= (rent(t2)**alpha * c(t2)**(1-alpha))**rho2/(1-rho2);
 objR1 .. objR =e= sum(t2, betas(t2)*uR(t2))
 
@@ -468,58 +468,17 @@ objvrent.. Vrent =e= ur1 + beta*Evrentp;
 s1.lo = epsilon;
 s1.up = 10;
 b1.lo = epsilon;
-b1.up = 9;
-c1.lo = epsilon;
-c1.up = 5;
+b1.up = Blim;
+s1plus.lo = epsilon;
+s1plus.up = 19.9;
 b1plus.lo = epsilon;
 b1plus.up = Blim;
+c1.lo = epsilon;
+c1.up = 5;
 rent1.lo = epsilon;
-rent1.up = 3;
+rent1.up = 2;
 p1.lo = epsilon;
 p1.up = 10;
-
-*initial guess
-
-s1.l = epsilon;
-b1.l = epsilon;
-rent1.l = 0.1;
-c1.l = 0.1;
-p1.l = c1.l;
-
-arccossond.l = arccos(dzsv*((1+rs)*(s1.l + y1 - M1 - p1.l ) - extsvmin)-1);
-arccosbond.l = arccos(dzb*((1+rb)*(b1.l + c1.l - p1.l )-extbmin)-1);
-uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**rho2/(1-rho2);
-Vondp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+4), coefsVo(d1,d2,d3,d4,d5)*
-                 cos((ord(d1)-1)*arccossond.l) *
-                 cos((ord(d2)-1)*arccosbond.l) *
-                 cos((ord(d3)-1)*arccos(dza*(alpha1 - extamin)-1))*
-                 cos((ord(d4)-1)*arccos(dzmp*(M1 - extmpmin)-1))*
-                 cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
-
-Evondp.l = sum(k1, GHWeights(k1)*Vondp.l(k1));
-Vond.l = uo1.l + beta*Evondp.l;
-
-
-arccossod.l = arccos(dzsv*((1+rs)*(s1.l + y1 - p1.l ) - extsvmin)-1);
-arccosbod.l = arccos(dzb*((1+rb)*(b1.l + c1.l - p1.l )-extbmin)-1);
-Vodp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
-                 cos((ord(d1)-1)*arccossod.l) *
-                 cos((ord(d2)-1)*arccosbod.l) *
-                 cos((ord(d3)-1)*arccos(dza*(alpha1 - extamin)-1))*
-                 cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
-Evodp.l = sum(k1, GHWeights(k1)*Vodp.l(k1));
-Vond.l = uo1.l + beta*Evodp.l;
-
-arccossr.l = arccos(dzsv*((1+rs)*(s1.l + y1 -rent1.l - p1.l ) - extsvmin)-1);
-arccosbr.l = arccos(dzb*((1+rb)*(b1.l + c1.l - p1.l )-extbmin)-1);
-ur1.l = (rent1.l**alpha1 * c1.l**(1-alpha1))**rho2/(1-rho2);
-Vrentp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
-                 cos((ord(d1)-1)*arccossr.l) *
-                 cos((ord(d2)-1)*arccosbr.l) *
-                 cos((ord(d3)-1)*arccos(dza*( alpha1  - extamin)-1))*
-                 cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
-EVrentp.l  = sum(k1, GHWeights(k1)*Vrentp.l(k1));
-Vrent.l = ur1.l + beta*Evrentp.l;
 
 model dpRenter1 "value function of renters at t1" /objvrent,Evrentplus,Vrentplus,arccossavr,arccosborr,utilr1,cashr1,cashr1up,br11,br10,br1,savr1/
       dpOnd "value function of no default houseowner at t1"/objvond,Evondplus,Vondplus,arccossavond,arccosborond,utilond,cashond,cashondup,bond0,bond1,bond,savond/
@@ -559,6 +518,24 @@ loop(t1,
                  vondsolstatus(v1,v2,v3,v4,v5) = 4;
                  D(v1,v2,v3,v4,v5) = 1;
          else
+*initial guess for Vond
+                 p1.l = rs*s1.l/(1+rs) + y1 - M1;
+                 c1.l = p1.l - rb*b1.l/(1+rb);
+                 s1plus.l = (1+rs)*(s1.l + y1 - M1 - p1.l);
+                 b1plus.l = (1+rb)*(b1.l + c1.l - p1.l);
+                 arccossond.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
+                 arccosbond.l = arccos(dzb*(b1plus.l - extbmin)-1);
+                 uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**rho2/(1-rho2);
+                 Vondp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+4), coefsVo(d1,d2,d3,d4,d5)*
+                                  cos((ord(d1)-1)*arccossond.l) *
+                                  cos((ord(d2)-1)*arccosbond.l) *
+                                  cos((ord(d3)-1)*arccos(dza*(alpha1 - extamin)-1))*
+                                  cos((ord(d4)-1)*arccos(dzmp*(M1 - extmpmin)-1))*
+                                  cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
+
+                 Evondp.l = sum(k1, GHWeights(k1)*Vondp.l(k1));
+                 Vond.l = uo1.l + beta*Evondp.l;
+
                  solve dpOnd using nlp maximizing Vond;
                  vondsol(v1,v2,v3,v4,v5) = objvond.l;
                  vondsolstatus(v1,v2,v3,v4,v5) = dpOnd.ModelStat;
@@ -567,6 +544,20 @@ loop(t1,
                  p1ndsol(v1,v2,v3,v4,v5) = p1.l;
                  bndpsol(v1,v2,v3,v4,v5) = b1plus.l;
          );
+*initial guess for Vod
+         p1.l = rs*s1.l/(1+rs) + y1;
+         c1.l = p1.l - rb*b1.l/(1+rb);
+         s1plus.l = (1+rs)*(s1.l + y1 - p1.l);
+         b1plus.l = (1+rb)*(b1.l + c1.l - p1.l);
+         arccossod.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
+         arccosbod.l = arccos(dzb*(b1plus.l - extbmin)-1);
+         Vodp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
+                 cos((ord(d1)-1)*arccossod.l) *
+                 cos((ord(d2)-1)*arccosbod.l) *
+                 cos((ord(d3)-1)*arccos(dza*(alpha1 - extamin)-1))*
+                 cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
+         Evodp.l = sum(k1, GHWeights(k1)*Vodp.l(k1));
+         Vond.l = uo1.l + beta*Evodp.l;
 
          solve dpOd using nlp maximizing Vod;
          vodsol(v1,v2,v3,v4,v5) = objvod.l;
@@ -576,6 +567,22 @@ loop(t1,
 
          Vowner1(v1,v2,v3,v4,v5) = max(vondsol(v1,v2,v3,v4,v5),vodsol(v1,v2,v3,v4,v5));
          Vowner1(v1,v2,v3,v4,v5)$(vondsolstatus(v1,v2,v3,v4,v5) > 2) = vodsol(v1,v2,v3,v4,v5);
+*initial guess for Vrent
+         rent1.l = 0.1;
+         c1.l = ((1-alpha1)*rent1.l**(1-alpha1)/alpha1)**(1/alpha1);
+         p1.l = rs*s1.l/(1+rs) + y1 - rent1.l;
+         s1plus.l = (1+rs)*(s1.l + y1 - rent1.l - p1.l);
+         b1plus.l = (1+rb)*(b1.l + c1.l - p1.l);
+         arccossr.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
+         arccosbr.l = arccos(dzb*(b1plus.l - extbmin)-1);
+         ur1.l = (rent1.l**alpha1 * c1.l**(1-alpha1))**rho2/(1-rho2);
+         Vrentp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
+                 cos((ord(d1)-1)*arccossr.l) *
+                 cos((ord(d2)-1)*arccosbr.l) *
+                 cos((ord(d3)-1)*arccos(dza*( alpha1  - extamin)-1))*
+                 cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
+         EVrentp.l  = sum(k1, GHWeights(k1)*Vrentp.l(k1));
+         Vrent.l = ur1.l + beta*Evrentp.l;
 
          solve dpRenter1 using nlp maximizing Vrent;
          vr1sol(v1,v2,v3,v5) = objvrent.l;
