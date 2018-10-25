@@ -58,7 +58,7 @@ debt0(t2) .. b(t2)+c(t2)-p(t2) =g= 0;
 debt1(t2) .. b(t2)+c(t2)-p(t2) =l= Blim;
 cashR(t2) .. s(t2)+y(t2)-rent(t2)-p(t2) =g= 0;
 debtT(t2)$(ord(t2)=card(t2)) .. b(t2) =e= epsilon;
-utilR(t2) .. uR(t2) =e= (rent(t2)**alpha * c(t2)**(1-alpha))**rho2/(1-rho2);
+utilR(t2) .. uR(t2) =e= (rent(t2)**alpha * c(t2)**(1-alpha))**(1-rho2)/(1-rho2);
 objR1 .. objR =e= sum(t2, betas(t2)*uR(t2))
 
 * Step 2: Define the transformed deterministic problem for house owners without mortgage
@@ -78,7 +78,7 @@ cashO(t2)  saving is nonnegative--house owners without mortgage
 
 savO(t2) .. s(t2+1) =e= (1+rs)*(s(t2)+y(t2)-p(t2));
 cashO(t2).. s(t2)+y(t2)-p(t2) =g= 0;
-utilO(t2) .. uO(t2) =e= (M**alpha * c(t2)**(1-alpha))**rho2/(1-rho2);
+utilO(t2) .. uO(t2) =e= (M**alpha * c(t2)**(1-alpha))**(1-rho2)/(1-rho2);
 objO1 .. objO =e= sum(t2, betas(t2)*uO(t2));
 
 * bound constraints
@@ -104,10 +104,10 @@ M = 0.5;
 
 
 
-uR.l(t2) = (rent.l(t2)**alpha * c.l(t2)**(1-alpha))**rho2/(1-rho2);
+uR.l(t2) = (rent.l(t2)**alpha * c.l(t2)**(1-alpha))**(1-rho2)/(1-rho2);
 objR.l = sum(t2, betas(t2)*uR.l(t2));
 
-uO.l(t2) = (M**alpha * c.l(t2)**(1-alpha))**rho2/(1-rho2);
+uO.l(t2) = (M**alpha * c.l(t2)**(1-alpha))**(1-rho2)/(1-rho2);
 objO.l = sum(t2,betas(t2)*uO.l(t2));
 
 Option limrow=0,limcol=0,solprint=off;
@@ -410,7 +410,7 @@ bond1.. b1+c1-p1 =g= 0;
 bond0.. b1+c1-p1 =l= Blim/(1+rb);
 cashond.. s1 + y1 - M1 -p1 =g= 0;
 cashondup.. (1+rs)*(s1 + y1 - M1 -p1) =l= 19.9;
-utilond.. uo1 =e= (M1**alpha1 * c1**(1-alpha1))**rho2/(1-rho2);
+utilond.. uo1 =e= (M1**alpha1 * c1**(1-alpha1))**(1-rho2)/(1-rho2);
 arccossavond.. arccossond =e= arccos(dzsv*(s1plus - extsvmin)-1);
 arccosborond.. arccosbond =e= arccos(dzb*(b1plus - extbmin)-1);
 
@@ -431,7 +431,7 @@ bod0.. b1 + c1 -p1 =g= 0;
 bod1.. (1+rb)*(b1 + c1 -p1) =l= Blim-0.01;
 cashod.. s1 + y1 -p1 =g= 0;
 cashodup.. (1+rs)*( s1 + y1 -p1 ) =l= 19.9;
-utilod.. uo1 =e= (M1**alpha1 * c1**(1-alpha1))**rho2/(1-rho2);
+utilod.. uo1 =e= (M1**alpha1 * c1**(1-alpha1))**(1-rho2)/(1-rho2);
 arccossavod.. arccossod =e= arccos(dzsv*(s1plus - extsvmin)-1);
 arccosborod.. arccosbod =e= arccos(dzb*(b1plus - extbmin)-1);
 
@@ -451,7 +451,7 @@ br10.. b1 + c1 -p1 =g= 0;
 br11.. b1 + c1 -p1 =l= Blim/(1+rb)-0.01;
 cashr1.. s1 + y1 -rent1 -p1 =g= 0;
 cashr1up.. (1+rs)*( s1 + y1 -rent1 -p1 ) =l= 19.9;
-utilr1.. ur1 =e= (rent1**alpha1 * c1**(1-alpha1))**rho2/(1-rho2);
+utilr1.. ur1 =e= (rent1**alpha1 * c1**(1-alpha1))**(1-rho2)/(1-rho2);
 arccossavr.. arccossr =e= arccos(dzsv*(s1plus - extsvmin)-1);
 arccosborr.. arccosbr =e= arccos(dzb*(b1plus - extbmin)-1);
 
@@ -519,13 +519,13 @@ loop(t1,
                  D(v1,v2,v3,v4,v5) = 1;
          else
 *initial guess for Vond
-                 p1.l = rs*s1.l/(1+rs) + y1 - M1;
-                 c1.l = p1.l - rb*b1.l/(1+rb);
-                 s1plus.l = (1+rs)*(s1.l + y1 - M1 - p1.l);
-                 b1plus.l = (1+rb)*(b1.l + c1.l - p1.l);
+                 p1.l = 0.1;
+                 c1.l = 0.1;
+                 s1plus.l = (s1.l + y1 - M1 - p1.l);
+                 b1plus.l = (b1.l + c1.l - p1.l);
                  arccossond.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
                  arccosbond.l = arccos(dzb*(b1plus.l - extbmin)-1);
-                 uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**rho2/(1-rho2);
+                 uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**(1-rho2)/(1-rho2);
                  Vondp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+4), coefsVo(d1,d2,d3,d4,d5)*
                                   cos((ord(d1)-1)*arccossond.l) *
                                   cos((ord(d2)-1)*arccosbond.l) *
@@ -545,12 +545,13 @@ loop(t1,
                  bndpsol(v1,v2,v3,v4,v5) = b1plus.l;
          );
 *initial guess for Vod
-         p1.l = rs*s1.l/(1+rs) + y1;
-         c1.l = p1.l - rb*b1.l/(1+rb);
-         s1plus.l = (1+rs)*(s1.l + y1 - p1.l);
-         b1plus.l = (1+rb)*(b1.l + c1.l - p1.l);
+         p1.l = 0.1;
+         c1.l = 0.1;
+         s1plus.l = (s1.l + y1 - p1.l);
+         b1plus.l = (b1.l + c1.l - p1.l);
          arccossod.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
          arccosbod.l = arccos(dzb*(b1plus.l - extbmin)-1);
+         uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**(1-rho2)/(1-rho2);
          Vodp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
                  cos((ord(d1)-1)*arccossod.l) *
                  cos((ord(d2)-1)*arccosbod.l) *
@@ -569,13 +570,13 @@ loop(t1,
          Vowner1(v1,v2,v3,v4,v5)$(vondsolstatus(v1,v2,v3,v4,v5) > 2) = vodsol(v1,v2,v3,v4,v5);
 *initial guess for Vrent
          rent1.l = 0.1;
-         c1.l = ((1-alpha1)*rent1.l**(1-alpha1)/alpha1)**(1/alpha1);
-         p1.l = rs*s1.l/(1+rs) + y1 - rent1.l;
-         s1plus.l = (1+rs)*(s1.l + y1 - rent1.l - p1.l);
-         b1plus.l = (1+rb)*(b1.l + c1.l - p1.l);
+         c1.l = 0.1;
+         p1.l = 0.1;
+         s1plus.l = (s1.l + y1 - rent1.l - p1.l);
+         b1plus.l = (b1.l + c1.l - p1.l);
          arccossr.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
          arccosbr.l = arccos(dzb*(b1plus.l - extbmin)-1);
-         ur1.l = (rent1.l**alpha1 * c1.l**(1-alpha1))**rho2/(1-rho2);
+         ur1.l = (rent1.l**alpha1 * c1.l**(1-alpha1))**(1-rho2)/(1-rho2);
          Vrentp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
                  cos((ord(d1)-1)*arccossr.l) *
                  cos((ord(d2)-1)*arccosbr.l) *
