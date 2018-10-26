@@ -4,28 +4,38 @@ beta discount rate /0.99833/
 rho1 wage auto correlation /0.9/
 sigma wage standard deviation/0.01/
 rho2 CRRA /2/
+gamma intratemporal substitutability between housing and non-durable consumption goods /-3/
 age household age /30/
 rs saving interest rate /0.00033/
 avy permanent average monthly income /1/
 rb credit card debt interest rate /0.013/
-Blim credit limit of all credit cards /10/
+Blim credit limit of all credit cards /5/
 epsilon A small numbner /0.001/
 myear mortgage length /120/
-
+lifeT life expectancy after age /480/
+rentss the ratio of rent over c at steady state
 ;
+
+
 
 * Step 1: Define the transformed deterministic problem for renters
 
 
-Sets t2 time month/1*480/;
+Sets t2 time month/1*201/;
 
 parameters
 y(t2) monthly income
 alpha parameters of preference to housing service
 M     mortgage payment
-betas(t2) discount factor;
+betas(t2) discount factor
+;
 y(t2) = 1;
-betas(t2) = beta**(ord(t2)-1);
+betas(t2)$(ord(t2) lt card(t2)) = beta**(ord(t2)-1);
+betas(t2)$(ord(t2) eq card(t2)) = beta**(ord(t2)-1)*(1 - beta**(lifeT - ord(t2)+1))/(1 - beta);
+
+alpha = 0.5;
+M = 0.5;
+rentss = ((1-alpha)/alpha)**(1/gamma);
 
 variables
 objR objective creterion of renters
@@ -49,17 +59,16 @@ bor(t2) process of credit card debt grwoth
 debt0(t2) lower bound of credit card debt
 debt1(t2) upper bound of credit card debt
 cashR(t2)  saving is nonnegative--renters
-debtT(t2)    credit card debt of the last month of one's life
 ;
 
-savR(t2)..  s(t2+1) =e= (1+rs)*(s(t2)+y(t2)-rent(t2)-p(t2));
-bor(t2) .. b(t2+1) =e= (1+rb)*(b(t2)+c(t2)-p(t2));
+savR(t2)$(ord(t2) < card(t2)) ..  s(t2+1) =e= (1+rs)*(s(t2)+y(t2)-rent(t2)-p(t2));
+bor(t2)$(ord(t2) < card(t2)) .. b(t2+1) =e= (1+rb)*(b(t2)+c(t2)-p(t2));
 debt0(t2) .. b(t2)+c(t2)-p(t2) =g= 0;
 debt1(t2) .. b(t2)+c(t2)-p(t2) =l= Blim;
 cashR(t2) .. s(t2)+y(t2)-rent(t2)-p(t2) =g= 0;
-debtT(t2)$(ord(t2)=card(t2)) .. b(t2) =e= epsilon;
-utilR(t2) .. uR(t2) =e= (rent(t2)**alpha * c(t2)**(1-alpha))**(1-rho2)/(1-rho2);
-objR1 .. objR =e= sum(t2, betas(t2)*uR(t2))
+utilR(t2)$(ord(t2) < card(t2)) .. uR(t2) =e= (alpha*rent(t2)**gamma + (1-alpha)*c(t2)**gamma)**((1-rho2)/gamma)/(1-rho2);
+objR1 .. objR =e= sum(t2$(ord(t2) < card(t2)), betas(t2)*uR(t2)) +
+         sum(t2$(ord(t2)=card(t2)), betas(t2)/(1-beta)*(alpha*((rs*s(t2)/(1+rs)-rb*b(t2)/(1+rb)+y(t2))*rentss/(1+rentss))**gamma + (1-alpha)*((rs*s(t2)/(1+rs)-rb*b(t2)/(1+rb)+y(t2))/(1+rentss))**gamma)**((1-rho2)/gamma)/(1-rho2));
 
 * Step 2: Define the transformed deterministic problem for house owners without mortgage
 * because the borrowing process are the same for owners and renters, we dont have to model the process twice.
@@ -76,38 +85,38 @@ savO(t2) process of saving growth of house owners
 cashO(t2)  saving is nonnegative--house owners without mortgage
 ;
 
-savO(t2) .. s(t2+1) =e= (1+rs)*(s(t2)+y(t2)-p(t2));
+savO(t2)$(ord(t2) < card(t2)) .. s(t2+1) =e= (1+rs)*(s(t2)+y(t2)-p(t2));
 cashO(t2).. s(t2)+y(t2)-p(t2) =g= 0;
-utilO(t2) .. uO(t2) =e= (M**alpha * c(t2)**(1-alpha))**(1-rho2)/(1-rho2);
+utilO(t2) .. uO(t2) =e= (alpha*M**gamma + (1-alpha)*c(t2)**gamma)**((1-rho2)/gamma)/(1-rho2);
 objO1 .. objO =e= sum(t2, betas(t2)*uO(t2));
 
 * bound constraints
 s.lo(t2) = epsilon;
-s.up(t2) = 20;
+s.up(t2) = 5;
 b.lo(t2) = epsilon;
 b.up(t2) = Blim;
 p.lo(t2) = epsilon;
 c.lo(t2) = epsilon;
-c.up(t2) = 10;
+c.up(t2) = 5;
 rent.lo(t2) = epsilon;
-rent.up(t2) = 0.9;
+rent.up(t2) = 2;
 
 
 * initial guess
 s.l(t2) = epsilon;
 b.l(t2) = epsilon;
-rent.l(t2) = 0.2*y(t2);
-c.l(t2) = 0.5*y(t2);
+rent.l(t2) = 0.1;
+c.l(t2) = 0.1;
 p.l(t2) = c.l(t2);
-alpha = 0.5;
-M = 0.5;
 
 
 
-uR.l(t2) = (rent.l(t2)**alpha * c.l(t2)**(1-alpha))**(1-rho2)/(1-rho2);
-objR.l = sum(t2, betas(t2)*uR.l(t2));
 
-uO.l(t2) = (M**alpha * c.l(t2)**(1-alpha))**(1-rho2)/(1-rho2);
+uR.l(t2) = (alpha*rent.l(t2)**gamma + (1-alpha)*c.l(t2)**gamma)**((1-rho2)/gamma)/(1-rho2);
+objR.l = sum(t2$(ord(t2) < card(t2)), betas(t2)*uR.l(t2)) +
+         sum(t2$(ord(t2)=card(t2)), betas(t2)/(1-beta)*(alpha*((rs*s.l(t2)/(1+rs)-rb*b.l(t2)/(1+rb)+y(t2))*rentss/(1+rentss))**gamma + (1-alpha)*((rs*s.l(t2)/(1+rs)-rb*b.l(t2)/(1+rb)+y(t2))/(1+rentss))**gamma)**((1-rho2)/gamma)/(1-rho2));
+
+uO.l(t2) = (alpha*M**gamma + (1-alpha)*c.l(t2)**gamma)**((1-rho2)/gamma)/(1-rho2);
 objO.l = sum(t2,betas(t2)*uO.l(t2));
 
 Option limrow=0,limcol=0,solprint=off;
@@ -117,22 +126,22 @@ OPTION DOMLIM = 1000;
 OPTION NLP= conopt;
 option decimals = 7;
 
-model dpRenter "value function of renters at t=myear+1" /objR1,utilR,savR,bor,debt0,debt1,cashR,debtT/
-      dpOwner "value function of houseowner at t=myear+1"/objO1,utilO,savO,bor,debt0,debt1,cashO,debtT/;
+model dpRenter "value function of renters at t=myear+1" /objR1,utilR,savR,bor,debt0,debt1,cashR/
+      dpOwner "value function of houseowner at t=myear+1"/objO1,utilO,savO,bor,debt0,debt1,cashO/;
 
 *******************************************************
 * Step 2: Optimization step
 
-set v1 grid space/1*6/
+set v1 grid space/1*10/
 alias(v1,v2,v3,v4,v5,d1,d2,d3,d4,d5);
 
 *approximation domain
 
 scalars
 svmin lower bound of s /0/
-svmax upper bound of s /20/
+svmax upper bound of s /5/
 bmin lower bound of b /0/
-bmax upper bound of b /10/
+bmax upper bound of b /5/
 amin lower bound of alpha /0.1/
 amax upper bound of alpha /0.9/
 mpmin lower bound of mortgage payment /0.05/
@@ -410,7 +419,7 @@ bond1.. b1+c1-p1 =g= 0;
 bond0.. b1+c1-p1 =l= Blim/(1+rb);
 cashond.. s1 + y1 - M1 -p1 =g= 0;
 cashondup.. (1+rs)*(s1 + y1 - M1 -p1) =l= 19.9;
-utilond.. uo1 =e= (M1**alpha1 * c1**(1-alpha1))**(1-rho2)/(1-rho2);
+utilond.. uo1 =e=  (alpha1*M1**gamma + (1-alpha1)*c1**gamma)**((1-rho2)/gamma)/(1-rho2);
 arccossavond.. arccossond =e= arccos(dzsv*(s1plus - extsvmin)-1);
 arccosborond.. arccosbond =e= arccos(dzb*(b1plus - extbmin)-1);
 
@@ -431,7 +440,7 @@ bod0.. b1 + c1 -p1 =g= 0;
 bod1.. (1+rb)*(b1 + c1 -p1) =l= Blim-0.01;
 cashod.. s1 + y1 -p1 =g= 0;
 cashodup.. (1+rs)*( s1 + y1 -p1 ) =l= 19.9;
-utilod.. uo1 =e= (M1**alpha1 * c1**(1-alpha1))**(1-rho2)/(1-rho2);
+utilod.. uo1 =e= (alpha1*M1**gamma + (1-alpha1)*c1**gamma)**((1-rho2)/gamma)/(1-rho2);
 arccossavod.. arccossod =e= arccos(dzsv*(s1plus - extsvmin)-1);
 arccosborod.. arccosbod =e= arccos(dzb*(b1plus - extbmin)-1);
 
@@ -451,7 +460,7 @@ br10.. b1 + c1 -p1 =g= 0;
 br11.. b1 + c1 -p1 =l= Blim/(1+rb)-0.01;
 cashr1.. s1 + y1 -rent1 -p1 =g= 0;
 cashr1up.. (1+rs)*( s1 + y1 -rent1 -p1 ) =l= 19.9;
-utilr1.. ur1 =e= (rent1**alpha1 * c1**(1-alpha1))**(1-rho2)/(1-rho2);
+utilr1.. ur1 =e= (alpha1*rent1**gamma + (1-alpha1)*c1**gamma)**((1-rho2)/gamma)/(1-rho2);
 arccossavr.. arccossr =e= arccos(dzsv*(s1plus - extsvmin)-1);
 arccosborr.. arccosbr =e= arccos(dzb*(b1plus - extbmin)-1);
 
@@ -466,11 +475,11 @@ objvrent.. Vrent =e= ur1 + beta*Evrentp;
 
 * bound constraints
 s1.lo = epsilon;
-s1.up = 10;
+s1.up = 5;
 b1.lo = epsilon;
 b1.up = Blim;
 s1plus.lo = epsilon;
-s1plus.up = 19.9;
+s1plus.up = 5;
 b1plus.lo = epsilon;
 b1plus.up = Blim;
 c1.lo = epsilon;
@@ -478,7 +487,7 @@ c1.up = 5;
 rent1.lo = epsilon;
 rent1.up = 2;
 p1.lo = epsilon;
-p1.up = 10;
+p1.up = 5;
 
 model dpRenter1 "value function of renters at t1" /objvrent,Evrentplus,Vrentplus,arccossavr,arccosborr,utilr1,cashr1,cashr1up,br11,br10,br1,savr1/
       dpOnd "value function of no default houseowner at t1"/objvond,Evondplus,Vondplus,arccossavond,arccosborond,utilond,cashond,cashondup,bond0,bond1,bond,savond/
@@ -521,11 +530,11 @@ loop(t1,
 *initial guess for Vond
                  p1.l = 0.1;
                  c1.l = 0.1;
-                 s1plus.l = (s1.l + y1 - M1 - p1.l);
-                 b1plus.l = (b1.l + c1.l - p1.l);
+                 s1plus.l = s1.l;
+                 b1plus.l = b1.l + c1.l - p1.l;
                  arccossond.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
                  arccosbond.l = arccos(dzb*(b1plus.l - extbmin)-1);
-                 uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**(1-rho2)/(1-rho2);
+                 uo1.l = (alpha1*M1**gamma + (1-alpha1)*c1.l**gamma)**((1-rho2)/gamma)/(1-rho2);
                  Vondp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+4), coefsVo(d1,d2,d3,d4,d5)*
                                   cos((ord(d1)-1)*arccossond.l) *
                                   cos((ord(d2)-1)*arccosbond.l) *
@@ -537,7 +546,7 @@ loop(t1,
                  Vond.l = uo1.l + beta*Evondp.l;
 
                  solve dpOnd using nlp maximizing Vond;
-                 vondsol(v1,v2,v3,v4,v5) = objvond.l;
+                 vondsol(v1,v2,v3,v4,v5) = vond.l;
                  vondsolstatus(v1,v2,v3,v4,v5) = dpOnd.ModelStat;
                  D(v1,v2,v3,v4,v5) $ (vondsolstatus(v1,v2,v3,v4,v5) > 2 ) = 1;
                  c1ndsol(v1,v2,v3,v4,v5) = c1.l;
@@ -547,36 +556,36 @@ loop(t1,
 *initial guess for Vod
          p1.l = 0.1;
          c1.l = 0.1;
-         s1plus.l = (s1.l + y1 - p1.l);
+         s1plus.l = s1.l ;
          b1plus.l = (b1.l + c1.l - p1.l);
          arccossod.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
          arccosbod.l = arccos(dzb*(b1plus.l - extbmin)-1);
-         uo1.l = (M1**alpha1 * c1.l**(1-alpha1))**(1-rho2)/(1-rho2);
+         uo1.l = (alpha1*M1**gamma + (1-alpha1)*c1.l**gamma)**((1-rho2)/gamma)/(1-rho2);
          Vodp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
                  cos((ord(d1)-1)*arccossod.l) *
                  cos((ord(d2)-1)*arccosbod.l) *
                  cos((ord(d3)-1)*arccos(dza*(alpha1 - extamin)-1))*
                  cos((ord(d5)-1)*arccos(dzy*(y1plus(k1)-extymin)-1)) );
          Evodp.l = sum(k1, GHWeights(k1)*Vodp.l(k1));
-         Vond.l = uo1.l + beta*Evodp.l;
+         Vod.l = uo1.l + beta*Evodp.l;
 
          solve dpOd using nlp maximizing Vod;
-         vodsol(v1,v2,v3,v4,v5) = objvod.l;
+         vodsol(v1,v2,v3,v4,v5) = vod.l;
          c1dsol(v1,v2,v3,v4,v5) = c1.l;
          p1dsol(v1,v2,v3,v4,v5) = p1.l;
          bdpsol(v1,v2,v3,v4,v5) = b1plus.l;
 
-         Vowner1(v1,v2,v3,v4,v5) = max(vondsol(v1,v2,v3,v4,v5),vodsol(v1,v2,v3,v4,v5));
+         Vowner1(v1,v2,v3,v4,v5) = vondsol(v1,v2,v3,v4,v5);
          Vowner1(v1,v2,v3,v4,v5)$(vondsolstatus(v1,v2,v3,v4,v5) > 2) = vodsol(v1,v2,v3,v4,v5);
 *initial guess for Vrent
          rent1.l = 0.1;
          c1.l = 0.1;
          p1.l = 0.1;
-         s1plus.l = (s1.l + y1 - rent1.l - p1.l);
+         s1plus.l = s1.l;
          b1plus.l = (b1.l + c1.l - p1.l);
          arccossr.l = arccos(dzsv*(s1plus.l - extsvmin)-1);
          arccosbr.l = arccos(dzb*(b1plus.l - extbmin)-1);
-         ur1.l = (rent1.l**alpha1 * c1.l**(1-alpha1))**(1-rho2)/(1-rho2);
+         ur1.l = (alpha1*rent1.l**gamma + (1-alpha1)*c1.l**gamma)**((1-rho2)/gamma)/(1-rho2);
          Vrentp.l(k1) =  sum( (d1,d2,d3,d4,d5)$(ord(d1)+ord(d2)+ord(d3)+ord(d4)+ord(d5)<=card(d1)+3), coefsVr(d1,d2,d3,d5)*
                  cos((ord(d1)-1)*arccossr.l) *
                  cos((ord(d2)-1)*arccosbr.l) *
@@ -586,7 +595,7 @@ loop(t1,
          Vrent.l = ur1.l + beta*Evrentp.l;
 
          solve dpRenter1 using nlp maximizing Vrent;
-         vr1sol(v1,v2,v3,v5) = objvrent.l;
+         vr1sol(v1,v2,v3,v5) = vrent.l;
          );
 
          coefsVo(d1,d2,d3,d4,d5) = 0;
@@ -626,7 +635,7 @@ loop((v1,v2,v3,v4,v5),
   put  ainit(v3):14:6;
   put  mpinit(v4):14:6;
   put  yinit(v5):14:6;
-  put  Vowner1(v1,v2,v3,v4,v5);
+  put  Vowner1(v1,v2,v3,v4,v5):14:6;
   put  D(v1,v2,v3,v4,v5):14:6;
   put  c1ndsol(v1,v2,v3,v4,v5):14:6;
   put  p1ndsol(v1,v2,v3,v4,v5):14:6;
@@ -636,10 +645,3 @@ loop((v1,v2,v3,v4,v5),
   put  bdpsol(v1,v2,v3,v4,v5):14:6;
   put /;
 );
-
-
-
-
-
-
-
